@@ -62,8 +62,12 @@ def model_field_verbose_name(model, field_name):
     Follows relations; e.g comment.user.username
     """
     components = field_name.split('.')
+    output = []
     # Get the final property (don't follow this relation)
     field_name = components.pop()
+
+    def append_output(field):
+        output.append(field.verbose_name)
 
     def get_field(model, field_name):
         meta = model_options(model)
@@ -71,11 +75,13 @@ def model_field_verbose_name(model, field_name):
 
     def get_related(model, field_name):
         field = get_field(model, field_name)
+        append_output(field)
         return field.related.parent_model
 
     # Follow any relations to return the ultimate model
     model = reduce(get_related, components, model)
-    return get_field(model, field_name).verbose_name
+    append_output(get_field(model, field_name))
+    return ' '.join(output)
 
 
 def model_method_verbose_name(model, method_name):
